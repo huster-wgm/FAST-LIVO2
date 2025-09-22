@@ -42,12 +42,16 @@ void VIOManager::initializeVIO()
 {
   visual_submap = new SubSparseMap;
 
+  // fx = cam->fx();
+  // fy = cam->fy();
+  // cx = cam->cx();
+  // cy = cam->cy();
+  // image_resize_factor = cam->scale();
   fx = cam->fx();
   fy = cam->fy();
   cx = cam->cx();
   cy = cam->cy();
   image_resize_factor = cam->scale();
-
   printf("intrinsic: %.6lf, %.6lf, %.6lf, %.6lf\n", fx, fy, cx, cy);
 
   width = cam->width();

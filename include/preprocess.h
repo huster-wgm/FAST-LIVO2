@@ -130,6 +130,26 @@ POINT_CLOUD_REGISTER_POINT_STRUCT(Pandar128_ros::Point,
                                   (float, x, x)(float, y, y)(float, z, z)(float, timestamp, timestamp))
 /*****************/
 
+namespace edu_ros {
+struct EIGEN_ALIGN16 Point {
+    PCL_ADD_POINT4D;
+    float intensity;
+    double time;
+    uint8_t  tag;
+    uint8_t  line;      
+    double timestamp;
+    std::uint16_t ring;
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+};
+}
+POINT_CLOUD_REGISTER_POINT_STRUCT(edu_ros::Point,
+                                  (float, x, x)(float, y, y)(float, z, z)(float, intensity, intensity)
+                                      (uint8_t, tag, tag)
+                                      (uint8_t, line, line)                                      
+                                      (double, timestamp, timestamp)
+)
+
+
 class Preprocess
 {
 public:
@@ -157,6 +177,9 @@ private:
   void oust64_handler(const sensor_msgs::PointCloud2::ConstPtr &msg);
   void velodyne_handler(const sensor_msgs::PointCloud2::ConstPtr &msg);
   void xt32_handler(const sensor_msgs::PointCloud2::ConstPtr &msg);
+  
+  void edu_handler(const sensor_msgs::PointCloud2::ConstPtr &msg);
+
   void Pandar128_handler(const sensor_msgs::PointCloud2::ConstPtr &msg);
   void l515_handler(const sensor_msgs::PointCloud2::ConstPtr &msg);
   void give_feature(PointCloudXYZI &pl, vector<orgtype> &types);

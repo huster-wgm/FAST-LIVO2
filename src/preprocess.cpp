@@ -80,6 +80,11 @@ void Preprocess::process(const sensor_msgs::PointCloud2::ConstPtr &msg, PointClo
   case PANDAR128:
     Pandar128_handler(msg);
     break;
+
+  case EDU:
+    edu_handler(msg);
+    break;
+
   default:
     printf("Error LiDAR Type: %d \n", lidar_type);
     break;
@@ -551,6 +556,117 @@ void Preprocess::Pandar128_handler(const sensor_msgs::PointCloud2::ConstPtr &msg
   // cout << GREEN << "pl_surf.points[20000].timestamp: " << pl_surf.points[20000].curvature << RESET << endl;
   // cout << GREEN << "pl_surf.points[30000].timestamp: " << pl_surf.points[30000].curvature << RESET << endl;
   // cout << GREEN << "pl_surf.points[31000].timestamp: " << pl_surf.points[31000].curvature << RESET << endl;
+}
+
+
+void Preprocess::edu_handler(const sensor_msgs::PointCloud2::ConstPtr &msg) {
+
+
+
+ pl_surf.clear();
+  pl_corn.clear();
+  pl_full.clear();
+
+    pcl::PointCloud<edu_ros::Point> pl_orig;
+    pcl::fromROSMsg(*msg, pl_orig);
+    int plsize = pl_orig.points.size();
+    if (plsize == 0) return;
+    pl_surf.reserve(plsize);
+
+  // double t1 = omp_get_wtime();
+  // int plsize = msg->point_num;
+  // cout<<"plsie: "<<plsize<<endl;
+
+  pl_corn.reserve(plsize);
+  pl_surf.reserve(plsize);
+  pl_full.resize(plsize);
+
+  for(int i=0; i<N_SCANS; i++)
+  {
+    pl_buff[i].clear();
+    pl_buff[i].reserve(plsize);
+  }
+  uint valid_num = 0;
+  
+  if (feature_enabled)
+  {
+    for(uint i=1; i<plsize; i++)
+    {
+      if((pl_orig.points[i].line < N_SCANS) && ((pl_orig.points[i].tag & 0x30) == 0x10 || (pl_orig.points[i].tag & 0x30) == 0x00))
+      {
+        pl_full[i].x = pl_orig.points[i].x;
+        pl_full[i].y = pl_orig.points[i].y;
+        pl_full[i].z = pl_orig.points[i].z;
+        pl_full[i].intensity = pl_orig.points[i].intensity;
+        // pl_full[i].curvature = pl_orig.points[i].timestamp / float(1000000); //use curvature as time of each laser points
+        pl_full[i].curvature = (pl_orig.points[i].timestamp -pl_orig.points[0].timestamp)* 1e-6;     
+        bool is_new = false;
+        if((abs(pl_full[i].x - pl_full[i-1].x) > 1e-7) 
+            || (abs(pl_full[i].y - pl_full[i-1].y) > 1e-7)
+            || (abs(pl_full[i].z - pl_full[i-1].z) > 1e-7))
+        {
+          pl_buff[pl_orig.points[i].line].push_back(pl_full[i]);
+        }
+      }
+    }
+    static int count = 0;
+    static double time = 0.0;
+    count ++;
+    // double t0 = omp_get_wtime();
+    for(int j=0; j<N_SCANS; j++)
+    {
+      if(pl_buff[j].size() <= 5) continue;
+      pcl::PointCloud<PointType> &pl = pl_buff[j];
+      plsize = pl.size();
+      vector<orgtype> &types = typess[j];
+      types.clear();
+      types.resize(plsize);
+      plsize--;
+      for(uint i=0; i<plsize; i++)
+      {
+        types[i].range = sqrt(pl[i].x * pl[i].x + pl[i].y * pl[i].y);
+        vx = pl[i].x - pl[i + 1].x;
+        vy = pl[i].y - pl[i + 1].y;
+        vz = pl[i].z - pl[i + 1].z;
+        types[i].dista = sqrt(vx * vx + vy * vy + vz * vz);
+      }
+      types[plsize].range = sqrt(pl[plsize].x * pl[plsize].x + pl[plsize].y * pl[plsize].y);
+      give_feature(pl, types);
+      // pl_surf += pl;
+    }
+    // time += omp_get_wtime() - t0;
+    // printf("Feature extraction time: %lf \n", time / count);
+  }
+  else
+  {
+    for(uint i=1; i<plsize; i++)
+    {
+      if((pl_orig.points[i].line < N_SCANS) && ((pl_orig.points[i].tag & 0x30) == 0x10 || (pl_orig.points[i].tag & 0x30) == 0x00))
+      {
+        valid_num ++;
+        if (valid_num % point_filter_num == 0)
+        {
+          pl_full[i].x = pl_orig.points[i].x;
+          pl_full[i].y = pl_orig.points[i].y;
+          pl_full[i].z = pl_orig.points[i].z;
+          pl_full[i].intensity = pl_orig.points[i].intensity;
+          // pl_full[i].curvature = pl_orig.points[i].timestamp / float(1000000); // use curvature as time of each laser points, curvature unit: ms
+        pl_full[i].curvature = (pl_orig.points[i].timestamp -pl_orig.points[0].timestamp)* 1e-6;          
+        // std::cout<<"x"<<std::endl;
+          if(((abs(pl_full[i].x - pl_full[i-1].x) > 1e-7) 
+              || (abs(pl_full[i].y - pl_full[i-1].y) > 1e-7)
+              || (abs(pl_full[i].z - pl_full[i-1].z) > 1e-7))
+              && (pl_full[i].x * pl_full[i].x + pl_full[i].y * pl_full[i].y + pl_full[i].z * pl_full[i].z > (blind * blind)))
+          {
+            pl_surf.push_back(pl_full[i]);
+          }
+        }
+      }
+    }
+  }
+
+
+    return;
 }
 
 void Preprocess::xt32_handler(const sensor_msgs::PointCloud2::ConstPtr &msg)

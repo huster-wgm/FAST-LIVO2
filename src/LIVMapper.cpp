@@ -11,7 +11,7 @@ which is included as part of this source code package.
 */
 
 #include "LIVMapper.h"
-
+ 
 LIVMapper::LIVMapper(ros::NodeHandle &nh)
     : extT(0, 0, 0),
       extR(M3D::Identity())
@@ -183,6 +183,10 @@ void LIVMapper::initializeFiles()
 
 void LIVMapper::initializeSubscribersAndPublishers(ros::NodeHandle &nh, image_transport::ImageTransport &it) 
 {
+
+  sub_test = nh.subscribe("/imu/data", 2000, &LIVMapper::imu_cbk_test, this);
+
+
   sub_pcl = p_pre->lidar_type == AVIA ? 
             nh.subscribe(lid_topic, 200000, &LIVMapper::livox_pcl_cbk, this): 
             nh.subscribe(lid_topic, 200000, &LIVMapper::standard_pcl_cbk, this);
@@ -732,7 +736,9 @@ void LIVMapper::livox_pcl_cbk(const livox_ros_driver::CustomMsg::ConstPtr &msg_i
   mtx_buffer.unlock();
   sig_buffer.notify_all();
 }
-
+void LIVMapper::imu_cbk_test(const sensor_msgs::Imu::ConstPtr &msg_in){
+  return;
+}
 void LIVMapper::imu_cbk(const sensor_msgs::Imu::ConstPtr &msg_in)
 {
   if (!imu_en) return;
