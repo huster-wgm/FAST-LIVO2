@@ -129,7 +129,7 @@ public:
   vector<VisualPoint *> retrieve_voxel_points;
   vector<pointWithVar> append_voxel_points;
   FramePtr new_frame_;
-  cv::Mat img_cp, img_rgb, img_test;
+  cv::Mat img_cp, img_rgb, img_test, img_origin;
 
   enum CellType
   {

@@ -42,16 +42,12 @@ void VIOManager::initializeVIO()
 {
   visual_submap = new SubSparseMap;
 
-  // fx = cam->fx();
-  // fy = cam->fy();
-  // cx = cam->cx();
-  // cy = cam->cy();
-  // image_resize_factor = cam->scale();
   fx = cam->fx();
   fy = cam->fy();
   cx = cam->cx();
   cy = cam->cy();
   image_resize_factor = cam->scale();
+
   printf("intrinsic: %.6lf, %.6lf, %.6lf, %.6lf\n", fx, fy, cx, cy);
 
   width = cam->width();
@@ -155,7 +151,7 @@ void VIOManager::initializeVIO()
   patch_size_half = static_cast<int>(patch_size / 2);
   patch_buffer.resize(patch_size_total);
   warp_len = patch_size_total * patch_pyrimid_level;
-  border = (patch_size_half + 2) * 8;
+  border = (patch_size_half + 1) * (1 << patch_pyrimid_level);
 
   retrieve_voxel_points.reserve(length);
   append_voxel_points.reserve(length);
@@ -1789,6 +1785,7 @@ void VIOManager::dumpDataForColmap()
 
 void VIOManager::processFrame(cv::Mat &img, vector<pointWithVar> &pg, const unordered_map<VOXEL_LOCATION, VoxelOctoTree *> &feat_map, double img_time)
 {
+  img_origin = img.clone();
   if (width != img.cols || height != img.rows)
   {
     if (img.empty()) printf("[ VIO ] Empty Image!\n");

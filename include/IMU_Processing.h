@@ -18,9 +18,9 @@ which is included as part of this source code package.
 #include <condition_variable>
 #include <nav_msgs/Odometry.h>
 #include <utils/so3_math.h>
+#include <fstream>
 
-const bool time_list(PointType &x,
-                     PointType &y); //{return (x.curvature < y.curvature);};
+const bool time_list(PointType &x, PointType &y);
 
 /// *************IMU Process and undistortion
 class ImuProcess
@@ -63,6 +63,7 @@ public:
   bool imu_need_init = true;
   M3D Eye3d;
   V3D Zero3d;
+  int lidar_type;
 
 private:
   void IMU_init(const MeasureGroup &meas, StatesGroup &state, int &N);
