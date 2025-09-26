@@ -43,7 +43,8 @@ enum LID_TYPE
   L515 = 4,
   XT32 = 5,
   PANDAR128 = 6,
-  EDU = 7
+  EDU = 7,
+  ROBOSENSE = 8
 };
 enum SLAM_MODE
 {
@@ -55,7 +56,8 @@ enum EKF_STATE
 {
   WAIT = 0,
   VIO = 1,
-  LIO = 2
+  LIO = 2,
+  LO = 3
 };
 
 struct MeasureGroup

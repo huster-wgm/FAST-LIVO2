@@ -46,10 +46,7 @@ public:
  
   void RGBpointBodyToWorld(PointType const *const pi, PointType *const po);
   void standard_pcl_cbk(const sensor_msgs::PointCloud2::ConstPtr &msg);
-  void livox_pcl_cbk(const livox_ros_driver::CustomMsg::ConstPtr &msg_in);
-  
-  void imu_cbk_test(const sensor_msgs::Imu::ConstPtr &msg_in);  
-
+  void livox_pcl_cbk(const livox_ros_driver2::CustomMsg::ConstPtr &msg_in);
   void imu_cbk(const sensor_msgs::Imu::ConstPtr &msg_in);
   void img_cbk(const sensor_msgs::ImageConstPtr &msg_in);
   void publish_img_rgb(const image_transport::Publisher &pubImage, VIOManagerPtr vio_manager);
@@ -87,7 +84,7 @@ public:
   double _first_lidar_time = 0.0;
   double match_time = 0, solve_time = 0, solve_const_H_time = 0;
 
-  bool lidar_map_inited = false, pcd_save_en = false, pub_effect_point_en = false, pose_output_en = false, ros_driver_fix_en = false;
+  bool lidar_map_inited = false, pcd_save_en = false, pub_effect_point_en = false, pose_output_en = false, ros_driver_fix_en = false, hilti_en = false;
   int pcd_save_interval = -1, pcd_index = 0;
   int pub_scan_num = 1;
 
@@ -100,6 +97,7 @@ public:
   nav_msgs::Odometry imu_prop_odom;
   ros::Publisher pubImuPropOdom;
   double imu_time_offset = 0.0;
+  double lidar_time_offset = 0.0;
 
   bool gravity_align_en = false, gravity_align_finished = false;
 
@@ -136,9 +134,10 @@ public:
   PointCloudXYZI::Ptr feats_undistort;
   PointCloudXYZI::Ptr feats_down_body;
   PointCloudXYZI::Ptr feats_down_world;
-  PointCloudXYZI::Ptr pcl_w_wait_pub;
+  PointCloudXYZI::Ptr pcl_w_wait_pub, pcl_l_wait_pub;
   PointCloudXYZI::Ptr pcl_wait_pub;
   PointCloudXYZRGB::Ptr pcl_wait_save;
+  PointCloudXYZI::Ptr pcl_wait_save_intensity;
 
   ofstream fout_pre, fout_out, fout_pcd_pos, fout_points;
 
@@ -165,8 +164,7 @@ public:
   ros::Subscriber sub_pcl;
   ros::Subscriber sub_imu;
   ros::Subscriber sub_img;
-  ros::Subscriber sub_test;  
-  ros::Publisher pubLaserCloudFullRes;
+  ros::Publisher pubLaserCloudFullRes, pubLaserCloudFullResBody;
   ros::Publisher pubNormal;
   ros::Publisher pubSubVisualMap;
   ros::Publisher pubLaserCloudEffect;
@@ -176,7 +174,7 @@ public:
   ros::Publisher pubLaserCloudDyn;
   ros::Publisher pubLaserCloudDynRmed;
   ros::Publisher pubLaserCloudDynDbg;
-  image_transport::Publisher pubImage;
+  image_transport::Publisher pubImage, pubOriginImage;
   ros::Publisher mavros_pose_publisher;
   ros::Timer imu_prop_timer;
 
