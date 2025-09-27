@@ -11,6 +11,7 @@ which is included as part of this source code package.
 */
 
 #include "LIVMapper.h"
+#include <filesystem>
 
 LIVMapper::LIVMapper(ros::NodeHandle &nh)
     : extT(0, 0, 0),
@@ -507,6 +508,13 @@ void LIVMapper::savePCD()
     std::string raw_points_dir = std::string(ROOT_DIR) + "Log/PCD/all_raw_points.pcd";
     std::string downsampled_points_dir = std::string(ROOT_DIR) + "Log/PCD/all_downsampled_points.pcd";
     pcl::PCDWriter pcd_writer;
+
+    // create directory if not exists
+    std::string dir = std::string(ROOT_DIR) + "Log/PCD/";
+    if (!std::filesystem::exists(dir))
+    {
+      std::filesystem::create_directories(dir);
+    }
 
     if (img_en)
     {
