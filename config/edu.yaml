@@ -1,6 +1,6 @@
 common:
   img_topic: /camera/left/jpeg_1k/undistort
-  lid_topic: /livox/align
+  lid_topic: /livox/lidar
   imu_topic: /livox/imu
   img_en: 1
   lidar_en: 1
@@ -17,7 +17,7 @@ time_offset:
 preprocess:
   point_filter_num: 1
   filter_size_surf: 0.1
-  lidar_type: 7
+  lidar_type: 1
   scan_line: 4
   blind: 0.8
 vio:
