@@ -6,7 +6,7 @@ common:
   lidar_en: 1
   ros_driver_bug_fix: False
 extrin_calib:
-  extrinsic_T: [0.011, 0.02329, -0.04412]
+  extrinsic_T: [-0.011, -0.02329, 0.04412]
   extrinsic_R: [1, 0, 0, 0, 1, 0, 0, 0, 1]
   Rcl: [0.847529, -0.445654, 0.28825, 0.324691, 0.00573819, -0.945803, 0.419846, 0.895187, 0.149563]
   Pcl: [0.0219265, -0.0711209, -0.0329083]
@@ -19,7 +19,7 @@ preprocess:
   filter_size_surf: 0.1
   lidar_type: 1
   scan_line: 4
-  blind: 0.8
+  blind: 0.5
 vio:
   max_iterations: 5
   outlier_threshold: 1000
@@ -34,15 +34,15 @@ vio:
 imu:
   imu_en: True
   imu_int_frame: 30
-  acc_cov: 0.5
-  gyr_cov: 0.3
-  b_acc_cov: 0.0001
-  b_gyr_cov: 0.0001
+  acc_cov: 0.8
+  gyr_cov: 0.5
+  b_acc_cov: 0.001
+  b_gyr_cov: 0.001
 lio:
   max_iterations: 5
   dept_err: 0.02
-  beam_err: 0.05
-  min_eigen_value: 0.0025
+  beam_err: 0.15
+  min_eigen_value: 0.005
   voxel_size: 0.5
   max_layer: 2
   max_points_num: 50
@@ -53,7 +53,7 @@ local_map:
   sliding_thresh: 8
 uav:
   imu_rate_odom: False
-  gravity_align_en: False
+  gravity_align_en: True
 publish:
   dense_map_en: True
   pub_effect_point_en: False
@@ -64,7 +64,7 @@ evo:
   seq_name: CBD_Building_01
   pose_output_en: False
 pcd_save:
-  pcd_save_en: False
-  colmap_output_en: False
+  pcd_save_en: True
+  colmap_output_en: True
   filter_size_pcd: 0.15
   interval: -1
