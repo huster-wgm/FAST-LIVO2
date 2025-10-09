@@ -97,6 +97,7 @@ void LIVMapper::readParameters(ros::NodeHandle &nh)
 
   nh.param<int>("pcd_save/interval", pcd_save_interval, -1);
   nh.param<bool>("pcd_save/pcd_save_en", pcd_save_en, false);
+  nh.param<string>("pcd_save/pcd_save_dir", pcd_save_dir, "/tmp/fastlivo2");
   nh.param<bool>("pcd_save/colmap_output_en", colmap_output_en, false);
   nh.param<double>("pcd_save/filter_size_pcd", filter_size_pcd, 0.5);
   nh.param<vector<double>>("extrin_calib/extrinsic_T", extrinT, vector<double>());
@@ -142,7 +143,9 @@ void LIVMapper::initializeComponents()
   vio_manager->patch_pyrimid_level = patch_pyrimid_level;
   vio_manager->exposure_estimate_en = exposure_estimate_en;
   vio_manager->colmap_output_en = colmap_output_en;
+  vio_manager->set_pcd_save_dir(pcd_save_dir);
   vio_manager->initializeVIO();
+  std::cout << "vio_manager pcd_save_dir: " << vio_manager->save_pcd_dir << std::endl;
 
   p_imu->set_extrinsic(extT, extR);
   p_imu->set_gyr_cov_scale(V3D(gyr_cov, gyr_cov, gyr_cov));
@@ -151,6 +154,8 @@ void LIVMapper::initializeComponents()
   p_imu->set_gyr_bias_cov(V3D(0.0001, 0.0001, 0.0001));
   p_imu->set_acc_bias_cov(V3D(0.0001, 0.0001, 0.0001));
   p_imu->set_imu_init_frame_num(imu_int_frame);
+  p_imu->set_pcd_save_dir(pcd_save_dir);
+  std::cout << "p_imu pcd_save_dir: " << p_imu->save_pcd_dir << std::endl;
 
   if (!imu_en) p_imu->disable_imu();
   if (!gravity_est_en) p_imu->disable_gravity_est();
@@ -162,28 +167,32 @@ void LIVMapper::initializeComponents()
 
 void LIVMapper::initializeFiles() 
 {
-  if (pcd_save_en && colmap_output_en)
-  {
-      const std::string folderPath = std::string(ROOT_DIR) + "/scripts/colmap_output.sh";
-      
-      std::string chmodCommand = "chmod +x " + folderPath;
-      
-      int chmodRet = system(chmodCommand.c_str());  
-      if (chmodRet != 0) {
-          std::cerr << "Failed to set execute permissions for the script." << std::endl;
-          return;
-      }
-
-      int executionRet = system(folderPath.c_str());
-      if (executionRet != 0) {
-          std::cerr << "Failed to execute the script." << std::endl;
-          return;
-      }
+  if (pcd_save_en) {
+    // create directory if not exists
+    std::string dir = pcd_save_dir + "/PCD";
+    if (!std::filesystem::exists(dir))
+    {
+      std::filesystem::create_directories(dir);
+    }
   }
-  if(colmap_output_en) fout_points.open(std::string(ROOT_DIR) + "Log/Colmap/sparse/0/points3D.txt", std::ios::out);
-  if(pcd_save_interval > 0) fout_pcd_pos.open(std::string(ROOT_DIR) + "Log/PCD/scans_pos.json", std::ios::out);
-  fout_pre.open(DEBUG_FILE_DIR("mat_pre.txt"), std::ios::out);
-  fout_out.open(DEBUG_FILE_DIR("mat_out.txt"), std::ios::out);
+
+  if (colmap_output_en) {
+    // create directory if not exists
+    std::string model_dir = pcd_save_dir + "/Colmap/sparse/0";
+    std::string image_dir = pcd_save_dir + "/Colmap/images";
+    if (!std::filesystem::exists(model_dir))
+    {
+      std::filesystem::create_directories(model_dir);
+    }
+    if (!std::filesystem::exists(image_dir))
+    {
+      std::filesystem::create_directories(image_dir);
+    }
+  }
+  if(colmap_output_en) fout_points.open(pcd_save_dir + "/Colmap/sparse/0/points3D.txt", std::ios::out);
+  if(pcd_save_interval > 0) fout_pcd_pos.open(pcd_save_dir + "/PCD/scans_pos.json", std::ios::out);
+  fout_pre.open(pcd_save_dir + "/PCD/mat_pre.txt", std::ios::out);
+  fout_out.open(pcd_save_dir + "/PCD/mat_out.txt", std::ios::out);
 }
 
 void LIVMapper::initializeSubscribersAndPublishers(ros::NodeHandle &nh, image_transport::ImageTransport &it) 
@@ -505,16 +514,9 @@ void LIVMapper::savePCD()
 {
   if (pcd_save_en && (pcl_wait_save->points.size() > 0 || pcl_wait_save_intensity->points.size() > 0) && pcd_save_interval < 0) 
   {
-    std::string raw_points_dir = std::string(ROOT_DIR) + "Log/PCD/all_raw_points.pcd";
-    std::string downsampled_points_dir = std::string(ROOT_DIR) + "Log/PCD/all_downsampled_points.pcd";
+    std::string raw_points_dir = pcd_save_dir + "/PCD/all_raw_points.pcd";
+    std::string downsampled_points_dir = pcd_save_dir + "/PCD/all_downsampled_points.pcd";
     pcl::PCDWriter pcd_writer;
-
-    // create directory if not exists
-    std::string dir = std::string(ROOT_DIR) + "Log/PCD/";
-    if (!std::filesystem::exists(dir))
-    {
-      std::filesystem::create_directories(dir);
-    }
 
     if (img_en)
     {
@@ -1231,7 +1233,7 @@ void LIVMapper::publish_frame_world(const ros::Publisher &pubLaserCloudFullRes, 
     if ((pcl_wait_save->size() > 0 || pcl_wait_save_intensity->size() > 0) && pcd_save_interval > 0 && scan_wait_num >= pcd_save_interval)
     {
       pcd_index++;
-      string all_points_dir(string(string(ROOT_DIR) + "Log/PCD/") + to_string(pcd_index) + string(".pcd"));
+      string all_points_dir(string(pcd_save_dir + "/PCD/") + to_string(pcd_index) + string(".pcd"));
       pcl::PCDWriter pcd_writer;
       if (pcd_save_en)
       {

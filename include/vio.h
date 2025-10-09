@@ -103,6 +103,7 @@ public:
   int width, height, grid_n_width, grid_n_height, length;
   double image_resize_factor;
   double fx, fy, cx, cy;
+  string save_pcd_dir;
   int patch_pyrimid_level, patch_size, patch_size_total, patch_size_half, border, warp_len;
   int max_iterations, total_points;
 
@@ -167,6 +168,7 @@ public:
   void updateReferencePatch(const unordered_map<VOXEL_LOCATION, VoxelOctoTree *> &plane_map);
   void precomputeReferencePatches(int level);
   void dumpDataForColmap();
+  void set_pcd_save_dir(const string &dir) { save_pcd_dir = dir; }
   double calculateNCC(float *ref_patch, float *cur_patch, int patch_size);
   int getBestSearchLevel(const Matrix2d &A_cur_ref, const int max_level);
   V3F getInterpolatedPixel(cv::Mat img, V2D pc);

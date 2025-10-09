@@ -91,6 +91,8 @@ void ImuProcess::set_extrinsic(const V3D &transl, const M3D &rot)
   Lid_rot_to_IMU = rot;
 }
 
+void ImuProcess::set_pcd_save_dir(const string &dir) { save_pcd_dir = dir; }
+
 void ImuProcess::set_gyr_cov_scale(const V3D &scaler) { cov_gyr = scaler; }
 
 void ImuProcess::set_acc_cov_scale(const V3D &scaler) { cov_acc = scaler; }
@@ -579,7 +581,7 @@ void ImuProcess::Process2(LidarMeasureGroup &lidar_meas, StatesGroup &stat, Poin
       ROS_INFO("IMU Initials: ba covarience: %.8f %.8f %.8f; bg covarience: "
                "%.8f %.8f %.8f",
                cov_bias_acc[0], cov_bias_acc[1], cov_bias_acc[2], cov_bias_gyr[0], cov_bias_gyr[1], cov_bias_gyr[2]);
-      fout_imu.open(DEBUG_FILE_DIR("imu.txt"), ios::out);
+      fout_imu.open(save_pcd_dir + "/PCD/imu.txt", ios::out);
     }
 
     return;

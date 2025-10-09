@@ -42,6 +42,7 @@ public:
   void set_acc_bias_cov(const V3D &b_a);
   void set_inv_expo_cov(const double &inv_expo);
   void set_imu_init_frame_num(const int &num);
+  void set_pcd_save_dir(const string &dir);
   void disable_imu();
   void disable_gravity_est();
   void disable_bias_est();
@@ -64,6 +65,7 @@ public:
   M3D Eye3d;
   V3D Zero3d;
   int lidar_type;
+  string save_pcd_dir;
 
 private:
   void IMU_init(const MeasureGroup &meas, StatesGroup &state, int &N);

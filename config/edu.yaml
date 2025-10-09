@@ -64,6 +64,7 @@ evo:
   seq_name: CBD_Building_01
   pose_output_en: False
 pcd_save:
+  pcd_save_dir: "/path/to/save_dir"
   pcd_save_en: True
   colmap_output_en: True
   filter_size_pcd: 0.15
